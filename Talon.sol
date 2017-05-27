@@ -1,6 +1,5 @@
 pragma solidity ^0.4.9;
 
-import "./Receiver_Interface.sol";
 import "./ERC223_Interface.sol";
 
 contract ContractReceiver { function tokenFallback(address _from, uint _value, bytes _data); }
