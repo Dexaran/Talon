@@ -6,7 +6,7 @@ contract ContractReceiver { function tokenFallback(address _from, uint _value, b
  
  /* https://github.com/LykkeCity/EthereumApiDotNetCore/blob/master/src/ContractBuilder/contracts/token/SafeMath.sol */
 contract SafeMath {
-    uint256 constant public MAX_UINT256 =
+    uint256 constant MAX_UINT256 =
     0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF;
 
     function safeAdd(uint256 x, uint256 y) constant internal returns (uint256 z) {
