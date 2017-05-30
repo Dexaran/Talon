@@ -63,6 +63,14 @@ contract Talon is ERC223, SafeMath {
   function totalSupply() constant returns (uint256 _totalSupply) {
       return totalSupply;
   }
+  // Function to access the last block, when a reward for mining can be claimed.
+  function miningEndBlock() constant returns (uint256 _miningEndBlock) {
+      return miningEndBlock;
+  }
+  // Function to access the last block, which was declared a block when mining reward was claimed .
+  function lastMinedBlock() constant returns (uint256 _lastMinedBlock) {
+      return lastMinedBlock;
+  }
   
   
   function Talon() {
