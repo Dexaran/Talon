@@ -66,7 +66,7 @@ contract Talon is ERC223, SafeMath {
   
   
   function Talon() {
-      balances[msg.sender] = 20160000 * (10**18);
+      balances[msg.sender] = 22160000 * (10**18);
       totalSupply = balances[msg.sender];
       miningStartBlock = block.number;
       lastMinedBlock = miningStartBlock;
