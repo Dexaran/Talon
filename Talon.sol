@@ -144,6 +144,8 @@ contract Talon is ERC223, SafeMath {
   
   
   function avgBlockReward() constant returns (uint256 _reward) {
+      if(totalSupply >= targetSupply) throw;
+      
       if(block.number < miningEndBlock) {
             return (targetSupply - totalSupply)/(miningEndBlock-block.number);
       }
