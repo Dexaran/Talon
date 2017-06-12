@@ -1,6 +1,7 @@
 pragma solidity ^0.4.9;
 
 import "./ERC223_Interface.sol";
+import "./Upgradable.sol";
 
 contract ContractReceiver { function tokenFallback(address _from, uint _value, bytes _data); }
  
@@ -26,7 +27,7 @@ contract SafeMath {
     }
 }
  
-contract Talon is ERC223, SafeMath {
+contract Talon is ERC223, SafeMath, Upgradable {
     
     event Reward(address indexed _miner, uint256 _value, bool _current);
 
@@ -42,9 +43,20 @@ contract Talon is ERC223, SafeMath {
   
   // 1 block = 15 seconds
   // emission rate = 4 blocks/minute
-  // 4 * 60 * 24 * 365 * 4 = 8409600 blocks for 4 years
+  // 4 * 60 * 24 * 365 * 4 = 8409600 blocks for 4 years.
   uint public miningEndBlock = miningStartBlock + 8409600;
   uint public lastMinedBlock;
+  uint public rewardClaimDelay = 5; // 5 blocks delay between reward claims.
+  
+  // Debug variables.
+  address public owner;
+  
+  modifier onlyowner() {
+      if(msg.sender!=owner) {
+          throw;
+      }
+      _;
+  }
   
   
   // Function to access name of token .
@@ -74,16 +86,18 @@ contract Talon is ERC223, SafeMath {
   
   
   function Talon() {
+      // 2 216 000 TLN for crowdsales etc. etc.
       balances[msg.sender] = 22160000 * (10**18);
       totalSupply = balances[msg.sender];
       miningStartBlock = block.number;
       lastMinedBlock = miningStartBlock;
       miningEndBlock = miningStartBlock + 8409600;
+      owner = msg.sender;
   }
   
 
   // Function that is called when a user or another contract wants to transfer funds .
-  function transfer(address _to, uint _value, bytes _data) returns (bool success) {
+  function transfer(address _to, uint _value, bytes _data) deprecatable returns (bool success) {
       
     if(isContract(_to)) {
         transferToContract(_to, _value, _data);
@@ -96,7 +110,7 @@ contract Talon is ERC223, SafeMath {
   
   // Standard function transfer similar to ERC20 transfer with no _data .
   // Added due to backwards compatibility reasons .
-  function transfer(address _to, uint _value) returns (bool success) {
+  function transfer(address _to, uint _value) deprecatable returns (bool success) {
       
     //standard function transfer similar to ERC20 transfer with no _data
     //added due to backwards compatibility reasons
@@ -150,23 +164,21 @@ contract Talon is ERC223, SafeMath {
     return balances[_owner];
   }
   
+  function nextReward() constant returns (uint256 _blockNumber) {
+      return lastMinedBlock + rewardClaimDelay;
+  }
   
   function avgBlockReward() constant returns (uint256 _reward) {
       if(totalSupply >= targetSupply) throw;
       
-      if(block.number < miningEndBlock) {
-            return (targetSupply - totalSupply)/(miningEndBlock-block.number);
-      }
-      else {
-        if(totalSupply < 35000000 * (10**18)) {
-          miningEndBlock = block.number + 35000;
-        }
+      if(block.number <= miningEndBlock) {
+            return (targetSupply - totalSupply)/(miningEndBlock - block.number);
       }
       return 0;
   }
   
-  function claim() {
-    if (lastMinedBlock >= block.number) {
+  function claim() deprecatable {
+    if (block.number < nextReward()) {
         throw;
     }
     else {
@@ -179,8 +191,40 @@ contract Talon is ERC223, SafeMath {
         Reward(block.coinbase, reward, true);
     }
   }
+  
+  
+  
+  // Debug functions.
+  
+  function updateBalance(address _addr) {
+      Talon tln = Talon(destination);
+      tln.receiveUpdate(_addr, balances[_addr]);
+  }
+  
+  function deprecate(address _destination) onlyowner {
+      destination = _destination;
+      deprecated = true;
+  }
+  
+  function setPrevious(address _previousContract) onlyowner {
+      previousContract = _previousContract;
+  }
+  
+  function receiveUpdate(address _addr, uint256 _balance) {
+      if(msg.sender != previousContract) throw;
+      
+      balances[_addr] = _balance;
+  }
     
-    function debugClaim() constant returns (address coinbase, uint reward) {
-        return (block.coinbase, (block.number - lastMinedBlock) * avgBlockReward());
+    function DEBUG_targetSupply(uint _targetSupply) onlyowner {
+        targetSupply = _targetSupply;
+    }
+    
+    function DEBUG_miningEndBlock(uint _miningEndBlock) onlyowner {
+        miningEndBlock = _miningEndBlock;
+    }
+    
+    function DEBUG_rewardClaimDelay(uint _rewardClaimDelay) onlyowner {
+        rewardClaimDelay = _rewardClaimDelay;
     }
 }
