@@ -33,7 +33,7 @@ contract Talon is ERC223, SafeMath, Upgradable {
 
   mapping(address => uint) balances;
   
-  string public name = "Talon";
+  string public name = "Talon-TEST";
   string public symbol = "TLN";
   uint8 public decimals = 18;
   uint256 public totalSupply;
@@ -50,9 +50,17 @@ contract Talon is ERC223, SafeMath, Upgradable {
   
   // Debug variables.
   address public owner;
+  bool public debug = true;
   
   modifier onlyowner() {
       if(msg.sender!=owner) {
+          throw;
+      }
+      _;
+  }
+  
+  modifier onlydebug() {
+      if(!debug) {
           throw;
       }
       _;
@@ -201,7 +209,7 @@ contract Talon is ERC223, SafeMath, Upgradable {
       tln.receiveUpdate(_addr, balances[_addr]);
   }
   
-  function deprecate(address _destination) onlyowner {
+  function deprecate(address _destination) onlyowner deprecatable {
       destination = _destination;
       deprecated = true;
   }
@@ -216,15 +224,23 @@ contract Talon is ERC223, SafeMath, Upgradable {
       balances[_addr] = _balance;
   }
     
-    function DEBUG_targetSupply(uint _targetSupply) onlyowner {
+    function DEBUG_targetSupply(uint _targetSupply) onlyowner onlydebug {
         targetSupply = _targetSupply;
     }
     
-    function DEBUG_miningEndBlock(uint _miningEndBlock) onlyowner {
+    function DEBUG_miningEndBlock(uint _miningEndBlock) onlyowner onlydebug {
         miningEndBlock = _miningEndBlock;
     }
     
-    function DEBUG_rewardClaimDelay(uint _rewardClaimDelay) onlyowner {
+    function DEBUG_rewardClaimDelay(uint _rewardClaimDelay) onlyowner onlydebug {
         rewardClaimDelay = _rewardClaimDelay;
+    }
+    
+    function DEBUG_transferOwnership(address _newOwner) onlyowner onlydebug {
+        owner = _newOwner;
+    }
+    
+    function DEBUG_turnOffDebug() onlyowner onlydebug {
+        debug = false;
     }
 }
